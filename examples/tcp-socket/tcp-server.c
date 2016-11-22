@@ -36,6 +36,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define DEBUG DEBUG_NONE
+#include "net/ip/uip-debug.h"
+
 #define SERVER_PORT 80
 
 static struct tcp_socket socket;
@@ -50,6 +53,10 @@ PROCESS(tcp_server_process, "TCP echo process");
 AUTOSTART_PROCESSES(&tcp_server_process);
 static uint8_t get_received;
 static int bytes_to_send;
+
+#if UIP_CONF_ROUTER
+static uip_ipaddr_t ipaddr;
+#endif /* UIP_CONF_ROUTER */
 /*---------------------------------------------------------------------------*/
 static int
 input(struct tcp_socket *s, void *ptr,
@@ -80,6 +87,25 @@ event(struct tcp_socket *s, void *ptr,
 {
   printf("event %d\n", ev);
 }
+
+/*---------------------------------------------------------------------------*/
+static void
+print_local_addresses(void)
+{
+  int i;
+  uint8_t state;
+
+  PRINTA("Server IPv6 addresses:\n");
+  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
+    state = uip_ds6_if.addr_list[i].state;
+    if(uip_ds6_if.addr_list[i].isused &&
+       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
+      PRINTA(" ");
+      uip_debug_ipaddr_print(&uip_ds6_if.addr_list[i].ipaddr);
+      PRINTA("\n");
+    }
+  }
+}
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(tcp_server_process, ev, data)
 {
@@ -90,6 +116,14 @@ PROCESS_THREAD(tcp_server_process, ev, data)
                outputbuf, sizeof(outputbuf),
                input, event);
   tcp_socket_listen(&socket, SERVER_PORT);
+  
+  #if UIP_CONF_ROUTER
+  uip_ip6addr(&ipaddr, 0xaaaa, 0, 0, 0, 0, 0, 0, 0);
+  uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
+  uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
+ #endif /* UIP_CONF_ROUTER */
+
+  print_local_addresses();
 
   printf("Listening on %d\n", SERVER_PORT);
   while(1) {
