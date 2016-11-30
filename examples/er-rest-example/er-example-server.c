@@ -154,7 +154,7 @@ PROCESS_THREAD(er_example_server, ev, data)
   uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
   uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
   uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
-#endif /* UIP_CONF_ROUTER */
+ #endif /* UIP_CONF_ROUTER */
 
   print_local_addresses();
 
@@ -167,15 +167,15 @@ PROCESS_THREAD(er_example_server, ev, data)
    * All static variables are the same for each URI path.
    */
   rest_activate_resource(&res_hello, "test/hello");
-/*  rest_activate_resource(&res_mirror, "debug/mirror"); */
-/*  rest_activate_resource(&res_chunks, "test/chunks"); */
-/*  rest_activate_resource(&res_separate, "test/separate"); */
+  rest_activate_resource(&res_mirror, "debug/mirror"); 
+  rest_activate_resource(&res_chunks, "test/chunks"); 
+  rest_activate_resource(&res_separate, "test/separate"); 
   rest_activate_resource(&res_push, "test/push");
-/*  rest_activate_resource(&res_event, "sensors/button"); */
-/*  rest_activate_resource(&res_sub, "test/sub"); */
-/*  rest_activate_resource(&res_b1_sep_b2, "test/b1sepb2"); */
+  rest_activate_resource(&res_event, "sensors/button"); 
+  rest_activate_resource(&res_sub, "test/sub"); 
+  rest_activate_resource(&res_b1_sep_b2, "test/b1sepb2"); 
 #if PLATFORM_HAS_LEDS
-/*  rest_activate_resource(&res_leds, "actuators/leds"); */
+  rest_activate_resource(&res_leds, "actuators/leds"); 
   rest_activate_resource(&res_toggle, "actuators/toggle");
 #endif
 #if PLATFORM_HAS_LIGHT
