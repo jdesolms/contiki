@@ -43,11 +43,14 @@
 #include "contiki-net.h"
 #include "rest-engine.h"
 
+#include "net/ip/uip.h"
+
+
 #if PLATFORM_HAS_BUTTON
 #include "dev/button-sensor.h"
 #endif
 
-#define DEBUG 0
+#define DEBUG 1
 #if DEBUG
 #include <stdio.h>
 #define PRINTF(...) printf(__VA_ARGS__)
@@ -100,13 +103,36 @@ extern resource_t res_sht11;
 #endif
 */
 
+
+
 PROCESS(er_example_server, "Erbium Example Server");
 AUTOSTART_PROCESSES(&er_example_server);
 
+/*---------------------------------------------------------------------------*/
+static void
+print_local_addresses(void)
+{
+  int i;
+  uint8_t state;
+
+  PRINTF("Server IPv6 addresses: ");
+  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
+    state = uip_ds6_if.addr_list[i].state;
+    if(uip_ds6_if.addr_list[i].isused &&
+       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
+      PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
+      PRINTF("\n");
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
+
 PROCESS_THREAD(er_example_server, ev, data)
 {
+  uip_ipaddr_t ipaddr;
+  
   PROCESS_BEGIN();
-
+  
   PROCESS_PAUSE();
 
   PRINTF("Starting Erbium Example Server\n");
@@ -122,6 +148,15 @@ PROCESS_THREAD(er_example_server, ev, data)
   PRINTF("LL header: %u\n", UIP_LLH_LEN);
   PRINTF("IP+UDP header: %u\n", UIP_IPUDPH_LEN);
   PRINTF("REST max chunk: %u\n", REST_MAX_CHUNK_SIZE);
+  
+
+ #if UIP_CONF_ROUTER
+  uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
+  uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
+  uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
+#endif /* UIP_CONF_ROUTER */
+
+  print_local_addresses();
 
   /* Initialize the REST engine. */
   rest_init_engine();

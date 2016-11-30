@@ -42,7 +42,9 @@
 #define CC2538_RF_CONF_AUTOACK 0
 #define NETSTACK_CONF_RDC      stub_rdc_driver
 
-#define UART0_CONF_BAUD_RATE   115200
+#define USB_SERIAL_CONF_ENABLE        1
+
+#define UART0_CONF_BAUD_RATE   460800
 
 #endif /* PROJECT_CONF_H_ */
 
