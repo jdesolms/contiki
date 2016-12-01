@@ -50,4 +50,14 @@
 #define UBIDOTS_CONF_REMOTE_HOST         "2607:f0d0:2101:39::2"
 
 #endif /* PROJECT_CONF_H_ */
+
+/* User configuration */
+#define POST_PERIOD                      (CLOCK_SECOND * 40)
+#define VARIABLE_BUF_LEN                 16
+#define UBIDOTS_CONF_AUTH_TOKEN          "ff1e5e0353adca40bf7141e8c46d1d1a3bd805fb"
+#define VARKEY_TEMPERATURE               "5829f3f47625421b877bb542"
+#define VARKEY_HUMIDITY                  "5829f02776254207233236fd"
+#define UBIDOTS_DEMO_CONF_UPTIME    "5829f3f47625421b877bb542"
+#define UBIDOTS_DEMO_CONF_SEQUENCE    "5829f02776254207233236fd"
+#define UBIDOTS_CONF_IN_BUFFER_SIZE      64
 /*---------------------------------------------------------------------------*/

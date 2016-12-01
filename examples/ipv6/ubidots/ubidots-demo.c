@@ -16,7 +16,7 @@
  *    from this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCfLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
  * FOR A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE
  * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
@@ -44,6 +44,8 @@
 #include "dev/leds.h"
 #include "ubidots.h"
 
+#include "contiki-net.h"
+
 #include <stdio.h>
 #include <string.h>
 /*---------------------------------------------------------------------------*/
@@ -53,6 +55,19 @@
 #error "Make sure you have followed the steps in the README"
 #endif
 /*---------------------------------------------------------------------------*/
+
+#define DEBUG 1
+#if DEBUG
+#include <stdio.h>
+#define PRINTF(...) printf(__VA_ARGS__)
+#define PRINT6ADDR(addr) PRINTF("[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x]", ((uint8_t *)addr)[0], ((uint8_t *)addr)[1], ((uint8_t *)addr)[2], ((uint8_t *)addr)[3], ((uint8_t *)addr)[4], ((uint8_t *)addr)[5], ((uint8_t *)addr)[6], ((uint8_t *)addr)[7], ((uint8_t *)addr)[8], ((uint8_t *)addr)[9], ((uint8_t *)addr)[10], ((uint8_t *)addr)[11], ((uint8_t *)addr)[12], ((uint8_t *)addr)[13], ((uint8_t *)addr)[14], ((uint8_t *)addr)[15])
+#define PRINTLLADDR(lladdr) PRINTF("[%02x:%02x:%02x:%02x:%02x:%02x]", (lladdr)->addr[0], (lladdr)->addr[1], (lladdr)->addr[2], (lladdr)->addr[3], (lladdr)->addr[4], (lladdr)->addr[5])
+#else
+#define PRINTF(...)
+#define PRINT6ADDR(addr)
+#define PRINTLLADDR(addr)
+#endif
+
 /* Our own process' name */
 PROCESS(ubidots_demo_process, "Ubidots demo process");
 AUTOSTART_PROCESSES(&ubidots_demo_process);
@@ -181,13 +196,41 @@ print_reply(ubidots_reply_part_t *r)
     break;
   }
 }
+
+/*---------------------------------------------------------------------------*/
+static void
+print_local_addresses(void)
+{
+  int i;
+  uint8_t state;
+
+  PRINTF("Server IPv6 addresses: ");
+  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
+    state = uip_ds6_if.addr_list[i].state;
+    if(uip_ds6_if.addr_list[i].isused &&
+       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
+      PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
+      PRINTF("\n");
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(ubidots_demo_process, ev, data)
 {
+  uip_ipaddr_t ipaddr;
   PROCESS_BEGIN();
-
+ #if UIP_CONF_ROUTER
+  uip_ip6addr(&ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0, 0, 0, 0);
+  uip_ds6_set_addr_iid(&ipaddr, &uip_lladdr);
+  uip_ds6_addr_add(&ipaddr, 0, ADDR_AUTOCONF);
+ #endif /* UIP_CONF_ROUTER */
+ 
+ print_local_addresses();
+  
   ubidots_init(&ubidots_demo_process, headers);
-
+  
+ 
   sequence = 0;
 
   while(1) {
