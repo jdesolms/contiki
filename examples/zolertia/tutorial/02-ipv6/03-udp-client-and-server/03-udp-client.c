@@ -50,6 +50,7 @@
 #include "dev/tmp102.h"
 #endif
 
+#include "dev/leds.h"
 #include "dev/button-sensor.h"
 /*---------------------------------------------------------------------------*/
 /* Enables printing debug output from the IP/IPv6 libraries */
@@ -59,7 +60,7 @@
 /* Default is to send a packet every 60 seconds */
 #define SEND_INTERVAL (30 * CLOCK_SECOND)
 /*---------------------------------------------------------------------------*/
-/* Variable utilisé pour n'envoyer qu'une seule fois à l'appui du bouton */
+/* Variable used to send only once with user button*/
 int i = 0;
 /*---------------------------------------------------------------------------*/
 /* The structure used in the Simple UDP library to create an UDP connection */
@@ -95,24 +96,50 @@ tcpip_handler(void)
 }
 /*---------------------------------------------------------------------------*/
 static void
+state_trafficlight(int value)
+{
+  switch(value) {
+  case 0:
+    leds_off(LEDS_ALL);
+    leds_on(LEDS_RED);
+    break;
+  case 1:
+    leds_off(LEDS_ALL);
+    leds_on(LEDS_BLUE);
+    break;
+  case 2:
+    leds_off(LEDS_ALL);
+    leds_on(LEDS_GREEN);
+    break;
+  default:
+    leds_off(LEDS_ALL);
+    leds_on(LEDS_PURPLE);
+    break;
+  
+  }
+}
+/*---------------------------------------------------------------------------*/
+static void
 send_packet_event(void)
 {
   uint16_t aux;
   counter++;
 
-  msg.id = 0x4; /* Défini l'ID du feu/capteur */
+  msg.id = 0x2;               /* Set traffic light/sensor ID */
   msg.counter = counter;
-  msg.value1 = rand() % 3; /* Défini alétoirement l'état du feu */
-  msg.value2 = 0;          /* Défini le QoS */
+  msg.value1 = rand() % 3;    /* Set traffic light state */
+  msg.value2 = 0;             /* Set QoS */
 
   aux = vdd3_sensor.value(CC2538_SENSORS_VALUE_TYPE_CONVERTED);
   msg.battery = (uint16_t)aux;
 
   /* Print the sensor data */
-  printf("ID: %u, Valeur: %d,QoS: %d, batt: %u, counter: %u\n",
+  printf("ID: %u, Value: %d,QoS: %d, batt: %u, counter: %u\n",
          msg.id, msg.value1, msg.value2, msg.battery, msg.counter);
 
-  /* Convert to network byte order as expected by the UDPServer application */
+  state_trafficlight(msg.value1);
+
+  /* Convert to network byte order as expected by the UDP Server application */
   msg.counter = UIP_HTONS(msg.counter);
   msg.value1 = UIP_HTONS(msg.value1);
   msg.battery = UIP_HTONS(msg.battery);
@@ -130,19 +157,21 @@ send_packet_sensor(void)
   uint16_t aux;
   counter++;
 
-  msg.id = 0x4; /* Défini l'ID du feu/capteur */
+  msg.id = 0x2;               /* Set traffic light/sensor ID */
   msg.counter = counter;
-  msg.value1 = 2;//rand() % 3; /* Défini alétoirement l'état du feu */
-  msg.value2 = 2;          /* Défini le QoS */
+  msg.value1 = rand() % 3;    /* Set traffic light state */
+  msg.value2 = 2;             /* Set QoS */
 
   aux = vdd3_sensor.value(CC2538_SENSORS_VALUE_TYPE_CONVERTED);
   msg.battery = (uint16_t)aux;
 
   /* Print the sensor data */
-  printf("ID: %u, Valeur: %d,QoS: %d, batt: %u, counter: %u\n",
+  printf("ID: %u, Value: %d,QoS: %d, batt: %u, counter: %u\n",
          msg.id, msg.value1, msg.value2, msg.battery, msg.counter);
 
-  /* Convert to network byte order as expected by the UDPServer application */
+  state_trafficlight(msg.value1);
+
+  /* Convert to network byte order as expected by the UDP Server application */
   msg.counter = UIP_HTONS(msg.counter);
   msg.value1 = UIP_HTONS(msg.value1);
   msg.battery = UIP_HTONS(msg.battery);
@@ -213,7 +242,7 @@ PROCESS_THREAD(udp_client_process, ev, data)
    * obtain the IPv6 prefix from the DODAG root and create its IPv6 global
    * address
    */
-  /* set_global_address(); */
+  //set_global_address(); 
 
   printf("UDP client process started\n");
 
@@ -237,6 +266,7 @@ PROCESS_THREAD(udp_client_process, ev, data)
 #endif
 
   SENSORS_ACTIVATE(button_sensor);
+  leds_on(LEDS_RED); //Traffic lights 2 & 4 start at green, 1 & 3 at red
 
   /* Create a new connection with remote host.  When a connection is created
    * with udp_new(), it gets a local port number assigned automatically.
@@ -252,7 +282,7 @@ PROCESS_THREAD(udp_client_process, ev, data)
     PROCESS_EXIT();
   }
 
-  /* This function binds a UDP connection to a specified local por */
+  /* This function binds a UDP connection to a specified local port */
   udp_bind(client_conn, UIP_HTONS(UDP_CLIENT_PORT));
 
   PRINTF("Created a connection with the server ");
@@ -273,7 +303,7 @@ PROCESS_THREAD(udp_client_process, ev, data)
     }
     i = i + 1;
     /* Send data to the server */
-    /* Données non prioritaire envoyées toutes les 30 secondes : QoS 0 */
+    /* QoS 0: Non-priority data sent every 30 seconds */
     if (ev == PROCESS_EVENT_TIMER)
     {
       send_packet_event();
@@ -283,7 +313,7 @@ PROCESS_THREAD(udp_client_process, ev, data)
       }
     }
 
-    /* Données priotaire envoyées à chaque fois que le bouton est appuyé : QoS 2 */
+    /* QoS 2: Priority data when pressing the user button */
     if (ev == sensors_event && data == &button_sensor)
     {
       if (i % 2 == 0)

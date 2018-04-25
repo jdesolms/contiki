@@ -20,11 +20,11 @@ from ctypes import *
 #------------------------------------------------------------#
 ID_STRING      = "V0.1"
 #------------------------------------------------------------#
-MQTT_URL          = "things.ubidots.com"	# Lien pour Broker MQTT
-MQTT_PORT         = 1883			# Port MQTT
+MQTT_URL          = "things.ubidots.com"		# Url for accesing the Broker MQTT
+MQTT_PORT         = 1883						# MQTT port
 MQTT_KEEPALIVE    = 60
-MQTT_URL_PUB      = "/v1.6/devices/zolertia/" 	# TOPIC de publication
-MQTT_URL_TOPIC    = "/v1.6/devices/zolertia/#"	# TOPIC de souscription
+MQTT_URL_PUB      = "/v1.6/devices/zolertia/" 	# publishing TOPIC
+MQTT_URL_TOPIC    = "/v1.6/devices/zolertia/#"	# subscribing TOPIC
 #------------------------------------------------------------#
 # Variable used
 #------------------------------------------------------------#
@@ -32,7 +32,7 @@ var1 = "ADC1"
 var2 = "ADC2"
 #------------------------------------------------------------#
 HOST		= ""
-CLIENT		= "aaaa::212:4b00:60d:b3ef" # Correspond au contrôleur de feux (Zolertia)
+CLIENT		= "aaaa::212:4b00:60d:b3ef" # Matching the border router address fe80::212:4b00:60d:b3ef
 PORT		= 5678
 CMD_PORT	= 8765
 BUFSIZE		= 4096
@@ -50,7 +50,7 @@ DEBUG_PRINT_JSON  = 1
 #------------------------------------------------------------#
 class SENSOR(Structure):
 	_pack_   = 1
-		# Structure Clé/Valeur
+		# Structure Key/Value
 	_fields_ = 	[("id",c_uint16),	
 			("counter",c_uint8),
 			(var1,c_uint16),
@@ -63,9 +63,9 @@ class SENSOR(Structure):
 	def __init__(self, socket_buffer):
         	pass
 #------------------------------------------------------------#
-# Fonctions qui récupères les valeurs voulu
+# Export expected values from messages
 #------------------------------------------------------------#
-def jsonify_recv_data(msg):		# Récupère la valeur récepectionnée du feu
+def jsonify_recv_data(msg):		# Get traffic light state from message
 	for f_name, f_type in msg._fields_:
 		if f_name =="ADC2":	# Correspondait à la clé de la valeur voulu
 			if getattr(msg, f_name) != "0":
@@ -73,13 +73,13 @@ def jsonify_recv_data(msg):		# Récupère la valeur récepectionnée du feu
 			sensordata=value
 	return str(sensordata)
 # -----------------------------------------------------------#
-def jsonify_recv_QOS(msg):		# Récupère la valeur récepectionnée du QoS
+def jsonify_recv_QOS(msg):		# Get QoS from message
 	for f_name, f_type in msg._fields_:
 		if f_name =="battery":	# Correspondait à la clé de la valeur voulu
 			QOS=getattr(msg, f_name)		
 	return str(QOS)
 # -----------------------------------------------------------#
-# Fonction qui renvoit la valeur au controleur de feux
+# Sender fonction to the border router
 # -----------------------------------------------------------#
 def send_udp_cmd(addr,FEU):		
 	sclient = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
@@ -90,12 +90,13 @@ def send_udp_cmd(addr,FEU):
 		else:
 			DONNEE="B"
 		print (CLIENT, CMD_PORT)
+		print "Data sent : "+DONNEE
 		sclient.sendto(DONNEE, (CLIENT, CMD_PORT))
 	except Exception as error:
 		print error
 	sclient.close()
 # -----------------------------------------------------------#
-# Print le message reçu du publisheur
+# Print publisher's message received
 # -----------------------------------------------------------#
 def print_recv_data(msg):		
 	print "***"
@@ -104,11 +105,11 @@ def print_recv_data(msg):
 	print
 	print "***"
 # -----------------------------------------------------------#
-# Fonction qui va publier ce qu'on veut sur le Broker MQTT
+# Publish to MQTT Broker
 # -----------------------------------------------------------#
 def publish_recv_data(data, pubid, conn, addr,QOS):
 	try:
-		# Détermine quel feu à envoyer le message
+		# Select which traffic light sent something
 		if pubid ==1:
 			TOPIC="feu1"
 		if pubid ==2:
@@ -126,8 +127,8 @@ def publish_recv_data(data, pubid, conn, addr,QOS):
 		# Valeur changée et définie pour la soutenance
 		# A commenter si des valeurs spécifiques sont attendues
 		#------------------------------------------------------#
-		if data != 0:
-			data ="2" # Force le feu au vert
+		# if data != 0:
+		# 	data ="2" # Force le feu au vert
 		#------------------------------------------------------#
 
 		if QOS == '2':
@@ -135,17 +136,17 @@ def publish_recv_data(data, pubid, conn, addr,QOS):
 			print "Important data received, waiting to publish"
 			print
 			if (TOPIC == 'feu1') and data == "2":
-				publish.multiple(msgs, hostname=MQTT_URL)
+				#conn.publish.multiple(msgs, hostname=MQTT_URL)
 
 				res, mid = conn.publish(MQTT_URL_PUB + 'feu1', payload=data, qos=2)
 				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu1' + " with value : " + data
 				res, mid = conn.publish(MQTT_URL_PUB + 'feu2', payload="0", qos=2)
 				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu2' + " with value : " + "0"
 				# A décommenter si il y a plus de 2 valeurs à publier
-				res, mid = conn.publish(MQTT_URL_PUB + 'feu3', payload="0", qos=2)
-				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu3' + " with value : " + data
-				res, mid = conn.publish(MQTT_URL_PUB + 'feu4', payload="0", qos=2)
-				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu4' + " with value : " + "0"
+				# res, mid = conn.publish(MQTT_URL_PUB + 'feu3', payload="0", qos=2)
+				# print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu3' + " with value : " + data
+				# res, mid = conn.publish(MQTT_URL_PUB + 'feu4', payload="0", qos=2)
+				# print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu4' + " with value : " + "0"
 
 			if (TOPIC == 'feu2') and data == "2":
 				res, mid = conn.publish(MQTT_URL_PUB + 'feu1', payload="0", qos=2)
@@ -153,10 +154,10 @@ def publish_recv_data(data, pubid, conn, addr,QOS):
 				res, mid = conn.publish(MQTT_URL_PUB + 'feu2', payload=data, qos=2)
 				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu2' + " with value : " + data
 				# A décommenter si il y a plus de 2 valeurs à publier
-				res, mid = conn.publish(MQTT_URL_PUB + 'feu3', payload=data, qos=2)
-				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu3' + " with value : " + data
-				res, mid = conn.publish(MQTT_URL_PUB + 'feu4', payload=data, qos=2)
-				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu4' + " with value : " + data
+				# res, mid = conn.publish(MQTT_URL_PUB + 'feu3', payload=data, qos=2)
+				# print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu3' + " with value : " + data
+				# res, mid = conn.publish(MQTT_URL_PUB + 'feu4', payload=data, qos=2)
+				# print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu4' + " with value : " + data
 
 			if data == "1":
 				res, mid = conn.publish(MQTT_URL_PUB + 'feu1', payload=data, qos=2)
@@ -164,10 +165,10 @@ def publish_recv_data(data, pubid, conn, addr,QOS):
 				res, mid = conn.publish(MQTT_URL_PUB + 'feu2', payload=data, qos=2)
 				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu2' + " with value : " + data
 				# A décommenter si il y a plus de 2 valeurs à publier
-				res, mid = conn.publish(MQTT_URL_PUB + 'feu3', payload=data, qos=2)
-				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu3' + " with value : " + data
-				res, mid = conn.publish(MQTT_URL_PUB + 'feu4', payload=data, qos=2)
-				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu4' + " with value : " + data
+				# res, mid = conn.publish(MQTT_URL_PUB + 'feu3', payload=data, qos=2)
+				# print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu3' + " with value : " + data
+				# res, mid = conn.publish(MQTT_URL_PUB + 'feu4', payload=data, qos=2)
+				# print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu4' + " with value : " + data
 
 			print
 			print "Data publishing"
@@ -184,10 +185,10 @@ def publish_recv_data(data, pubid, conn, addr,QOS):
 				res, mid = conn.publish(MQTT_URL_PUB + 'feu2', payload="0", qos=1)
 				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu2' + " with value : " + "0"
 				# A décommenter si il y a plus de 2 valeurs à publier
-				res, mid = conn.publish(MQTT_URL_PUB + 'feu3', payload="0", qos=1)
-				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu3' + " with value : " + "0"
-				res, mid = conn.publish(MQTT_URL_PUB + 'feu4', payload="0", qos=1)
-				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu4' + " with value : " + "0"
+				# res, mid = conn.publish(MQTT_URL_PUB + 'feu3', payload="0", qos=1)
+				# print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu3' + " with value : " + "0"
+				# res, mid = conn.publish(MQTT_URL_PUB + 'feu4', payload="0", qos=1)
+				# print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu4' + " with value : " + "0"
 
 			if (TOPIC == 'feu2') and data == "2":
 				res, mid = conn.publish(MQTT_URL_PUB + 'feu1', payload="0", qos=1)
@@ -196,9 +197,9 @@ def publish_recv_data(data, pubid, conn, addr,QOS):
 				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu2' + " with value : " + data
 				res, mid = conn.publish(MQTT_URL_PUB + 'feu3', payload=data, qos=1)
 				# A décommenter si il y a plus de 2 valeurs à publier
-				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu3' + " with value : " + data
-				res, mid = conn.publish(MQTT_URL_PUB + 'feu4', payload=data, qos=1)
-				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu4' + " with value : " + data
+				# print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu3' + " with value : " + data
+				# res, mid = conn.publish(MQTT_URL_PUB + 'feu4', payload=data, qos=1)
+				# print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu4' + " with value : " + data
 
 			if data == "1":
 				res, mid = conn.publish(MQTT_URL_PUB + 'feu1', payload=data, qos=1)
@@ -206,10 +207,10 @@ def publish_recv_data(data, pubid, conn, addr,QOS):
 				res, mid = conn.publish(MQTT_URL_PUB + 'feu2', payload=data, qos=1)
 				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu2' + " with value : " + data
 				# A décommenter si il y a plus de 2 valeurs à publier
-				res, mid = conn.publish(MQTT_URL_PUB + 'feu3', payload=data, qos=1)
-				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu3' + " with value : " + data
-				res, mid = conn.publish(MQTT_URL_PUB + 'feu4', payload=data, qos=1)
-				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu4' + " with value : " + data
+				# res, mid = conn.publish(MQTT_URL_PUB + 'feu3', payload=data, qos=1)
+				# print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu3' + " with value : " + data
+				# res, mid = conn.publish(MQTT_URL_PUB + 'feu4', payload=data, qos=1)
+				# print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu4' + " with value : " + data
 
 			print
 			print "Data publishing"
@@ -226,10 +227,10 @@ def publish_recv_data(data, pubid, conn, addr,QOS):
 				res, mid = conn.publish(MQTT_URL_PUB + 'feu2', payload="0", qos=0)
 				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu2' + " with value : " + "0"
 				# A décommenter si il y a plus de 2 valeurs à publier
-				res, mid = conn.publish(MQTT_URL_PUB + 'feu3', payload="0", qos=0)
-				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu3' + " with value : " + "0"
-				res, mid = conn.publish(MQTT_URL_PUB + 'feu4', payload="0", qos=0)
-				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu4' + " with value : " + "0"
+				# res, mid = conn.publish(MQTT_URL_PUB + 'feu3', payload="0", qos=0)
+				# print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu3' + " with value : " + "0"
+				# res, mid = conn.publish(MQTT_URL_PUB + 'feu4', payload="0", qos=0)
+				# print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu4' + " with value : " + "0"
 
 			if (TOPIC == 'feu2') and data == "2":
 				res, mid = conn.publish(MQTT_URL_PUB + 'feu1', payload="0", qos=0)
@@ -237,10 +238,10 @@ def publish_recv_data(data, pubid, conn, addr,QOS):
 				res, mid = conn.publish(MQTT_URL_PUB + 'feu2', payload=data, qos=0)
 				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu2' + " with value : " + data
 				# A décommenter si il y a plus de 2 valeurs à publier
-				res, mid = conn.publish(MQTT_URL_PUB + 'feu3', payload=data, qos=0)
-				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu3' + " with value : " + data
-				res, mid = conn.publish(MQTT_URL_PUB + 'feu4', payload=data, qos=0)
-				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu4' + " with value : " + data
+				# res, mid = conn.publish(MQTT_URL_PUB + 'feu3', payload=data, qos=0)
+				# print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu3' + " with value : " + data
+				# res, mid = conn.publish(MQTT_URL_PUB + 'feu4', payload=data, qos=0)
+				# print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu4' + " with value : " + data
 
 			if data == "1":
 				res, mid = conn.publish(MQTT_URL_PUB + 'feu1', payload=data, qos=0)
@@ -248,10 +249,10 @@ def publish_recv_data(data, pubid, conn, addr,QOS):
 				res, mid = conn.publish(MQTT_URL_PUB + 'feu2', payload=data, qos=0)
 				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu2' + " with value : " + data
 				# A décommenter si il y a plus de 2 valeurs à publier
-				res, mid = conn.publish(MQTT_URL_PUB + 'feu3', payload=data, qos=0)
-				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu3' + " with value : " + data
-				res, mid = conn.publish(MQTT_URL_PUB + 'feu4', payload=data, qos=0)
-				print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu4' + " with value : " + data
+				# res, mid = conn.publish(MQTT_URL_PUB + 'feu3', payload=data, qos=0)
+				# print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu3' + " with value : " + data
+				# res, mid = conn.publish(MQTT_URL_PUB + 'feu4', payload=data, qos=0)
+				# print "MQTT: Publishing to " + MQTT_URL_PUB + 'feu4' + " with value : " + data
 			print
 			print "Data publishing"
 			print
@@ -259,7 +260,7 @@ def publish_recv_data(data, pubid, conn, addr,QOS):
 	except Exception as error:
 		print error
 # -----------------------------------------------------------#
-# Fonction MQTT
+# MQTT Function
 # -----------------------------------------------------------#
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
@@ -272,9 +273,9 @@ def on_connect(client, userdata, flags, rc):
 #------------------------------------------------------------#
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
-	print(msg.topic + " " + str(msg.payload) + ", qos: " + str(msg.qos))
+	print(msg.topic + " " + str(msg.payload) + ", qoss: " + str(msg.qos))
 #------------------------------------------------------------#
-# Fonction principale
+# Main function
 #------------------------------------------------------------#
 def start_client():
 	now = datetime.datetime.now()
@@ -288,7 +289,7 @@ def start_client():
 	except Exception :
 		print 'Failed to create socket.'
 		sys.exit()
-	# Défini le port et l'adresse du socket
+	# Set socket address and port
 	try:
 		server_address = (HOST, PORT)
 		print >>sys.stderr, 'starting up on %s port %s' % server_address
@@ -304,15 +305,15 @@ def start_client():
 	print
 
 	if ENABLE_MQTT:
-		# Initialise la connexion MQTT
+		# Initialize MQTT connexion
 		try:
 			client = mqtt.Client()
 		except Exception as error:
 			print error
 			raise
-		# Permet la connexion au Broker
+		# Allow connexion to the broker
 		client.on_connect = on_connect
-		# Correspond à la clé Token de Ubidots
+		# Set your Ubidots default token
 		client.username_pw_set("A1E-Zdfehlc7EmA9JEer6YIARbtHIMK1y8", "") #A1E-dEzBw6HHcOgRUz22KIwvuYkfvmfixy
 		client.on_message = on_message
 
@@ -328,7 +329,7 @@ def start_client():
 	
 	while True:
 
-		# Reçoit les données du client (data, addr)
+		# Receiving client data (data, addr)
 		print >>sys.stderr, '\nwaiting to receive message'
 		data, addr = s.recvfrom(BUFSIZE)
 		now = datetime.datetime.now()
@@ -338,7 +339,7 @@ def start_client():
 		if ENABLE_LOG:
 			print_recv_data(msg_recv)
 		
-		# Récupère les valeurs du publieur
+		# Get publisher values from message
 		sensordata = jsonify_recv_data(msg_recv)	
 		QOS = jsonify_recv_QOS(msg_recv)
 
