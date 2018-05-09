@@ -125,7 +125,7 @@ send_packet_sensor(void)
   uint16_t aux;
   counter++;
 
-  msg.id = 0x2; /* Set traffic light/sensor ID */
+  msg.id = 0x1; /* Set traffic light/sensor ID */
   msg.counter = counter;
   msg.value1 = 2; /* Set traffic light state */
   msg.value2 = 2; /* Set QoS */
