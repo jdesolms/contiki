@@ -2,6 +2,11 @@ obj_zoul/phase.o: ../../core/net/mac/phase.c ../../core/./net/mac/phase.h \
  ../../core/./net/linkaddr.h ../../platform/zoul/./contiki-conf.h \
  ../../platform/zoul/remote-revb/board.h ../../cpu/cc2538/./dev/gpio.h \
  ../../cpu/cc2538/./reg.h ../../cpu/cc2538/./dev/nvic.h \
+ ../../cpu/cc2538/./cc2538_cm3.h \
+ ../../cpu/cc2538/../arm/common/CMSIS/core_cm3.h \
+ ../../cpu/cc2538/../arm/common/CMSIS/core_cmInstr.h \
+ ../../cpu/cc2538/../arm/common/CMSIS/cmsis_gcc.h \
+ ../../cpu/cc2538/../arm/common/CMSIS/core_cmFunc.h \
  ../../core/./sys/timer.h ../../core/./sys/clock.h \
  ../../core/./sys/rtimer.h ../../cpu/cc2538/./rtimer-arch.h \
  ../../core/./contiki.h ../../core/./contiki-version.h \
@@ -28,6 +33,11 @@ obj_zoul/phase.o: ../../core/net/mac/phase.c ../../core/./net/mac/phase.h \
  ../../core/./net/linkaddr.h ../../platform/zoul/./contiki-conf.h :
  ../../platform/zoul/remote-revb/board.h ../../cpu/cc2538/./dev/gpio.h :
  ../../cpu/cc2538/./reg.h ../../cpu/cc2538/./dev/nvic.h :
+ ../../cpu/cc2538/./cc2538_cm3.h :
+ ../../cpu/cc2538/../arm/common/CMSIS/core_cm3.h :
+ ../../cpu/cc2538/../arm/common/CMSIS/core_cmInstr.h :
+ ../../cpu/cc2538/../arm/common/CMSIS/cmsis_gcc.h :
+ ../../cpu/cc2538/../arm/common/CMSIS/core_cmFunc.h :
  ../../core/./sys/timer.h ../../core/./sys/clock.h :
  ../../core/./sys/rtimer.h ../../cpu/cc2538/./rtimer-arch.h :
  ../../core/./contiki.h ../../core/./contiki-version.h :

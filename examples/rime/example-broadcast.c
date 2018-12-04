@@ -45,6 +45,8 @@
 
 #include "dev/leds.h"
 
+#include "net/netstack.h"
+
 #include <stdio.h>
 /*---------------------------------------------------------------------------*/
 PROCESS(example_broadcast_process, "Broadcast example");
@@ -62,6 +64,10 @@ static struct broadcast_conn broadcast;
 PROCESS_THREAD(example_broadcast_process, ev, data)
 {
   static struct etimer et;
+
+  radio_result_t rd = NETSTACK_RADIO.set_value(RADIO_PARAM_CHANNEL, 23);
+
+
 
   PROCESS_EXITHANDLER(broadcast_close(&broadcast);)
 

@@ -4,6 +4,11 @@ obj_zoul/noncoresec.o: ../../core/net/llsec/noncoresec/noncoresec.c \
  ../../platform/zoul/./contiki-conf.h \
  ../../platform/zoul/remote-revb/board.h ../../cpu/cc2538/./dev/gpio.h \
  ../../cpu/cc2538/./reg.h ../../cpu/cc2538/./dev/nvic.h \
+ ../../cpu/cc2538/./cc2538_cm3.h \
+ ../../cpu/cc2538/../arm/common/CMSIS/core_cm3.h \
+ ../../cpu/cc2538/../arm/common/CMSIS/core_cmInstr.h \
+ ../../cpu/cc2538/../arm/common/CMSIS/cmsis_gcc.h \
+ ../../cpu/cc2538/../arm/common/CMSIS/core_cmFunc.h \
  ../../core/./dev/radio.h ../../core/./net/llsec/anti-replay.h \
  ../../core/./contiki.h ../../core/./contiki-version.h \
  ../../core/./contiki-default-conf.h ../../core/./sys/process.h \
@@ -31,6 +36,11 @@ obj_zoul/noncoresec.o: ../../core/net/llsec/noncoresec/noncoresec.c \
  ../../platform/zoul/./contiki-conf.h :
  ../../platform/zoul/remote-revb/board.h ../../cpu/cc2538/./dev/gpio.h :
  ../../cpu/cc2538/./reg.h ../../cpu/cc2538/./dev/nvic.h :
+ ../../cpu/cc2538/./cc2538_cm3.h :
+ ../../cpu/cc2538/../arm/common/CMSIS/core_cm3.h :
+ ../../cpu/cc2538/../arm/common/CMSIS/core_cmInstr.h :
+ ../../cpu/cc2538/../arm/common/CMSIS/cmsis_gcc.h :
+ ../../cpu/cc2538/../arm/common/CMSIS/core_cmFunc.h :
  ../../core/./dev/radio.h ../../core/./net/llsec/anti-replay.h :
  ../../core/./contiki.h ../../core/./contiki-version.h :
  ../../core/./contiki-default-conf.h ../../core/./sys/process.h :

@@ -4,6 +4,11 @@ obj_zoul/print-stats.o: ../../core/lib/print-stats.c \
  ../../platform/zoul/./contiki-conf.h \
  ../../platform/zoul/remote-revb/board.h ../../cpu/cc2538/./dev/gpio.h \
  ../../cpu/cc2538/./reg.h ../../cpu/cc2538/./dev/nvic.h \
+ ../../cpu/cc2538/./cc2538_cm3.h \
+ ../../cpu/cc2538/../arm/common/CMSIS/core_cm3.h \
+ ../../cpu/cc2538/../arm/common/CMSIS/core_cmInstr.h \
+ ../../cpu/cc2538/../arm/common/CMSIS/cmsis_gcc.h \
+ ../../cpu/cc2538/../arm/common/CMSIS/core_cmFunc.h \
  ../../core/./net/rime/collect.h ../../core/./net/rime/runicast.h \
  ../../core/./net/rime/stunicast.h ../../core/./sys/ctimer.h \
  ../../core/./sys/etimer.h ../../core/./sys/timer.h \
@@ -44,6 +49,11 @@ obj_zoul/print-stats.o: ../../core/lib/print-stats.c \
  ../../platform/zoul/./contiki-conf.h :
  ../../platform/zoul/remote-revb/board.h ../../cpu/cc2538/./dev/gpio.h :
  ../../cpu/cc2538/./reg.h ../../cpu/cc2538/./dev/nvic.h :
+ ../../cpu/cc2538/./cc2538_cm3.h :
+ ../../cpu/cc2538/../arm/common/CMSIS/core_cm3.h :
+ ../../cpu/cc2538/../arm/common/CMSIS/core_cmInstr.h :
+ ../../cpu/cc2538/../arm/common/CMSIS/cmsis_gcc.h :
+ ../../cpu/cc2538/../arm/common/CMSIS/core_cmFunc.h :
  ../../core/./net/rime/collect.h ../../core/./net/rime/runicast.h :
  ../../core/./net/rime/stunicast.h ../../core/./sys/ctimer.h :
  ../../core/./sys/etimer.h ../../core/./sys/timer.h :

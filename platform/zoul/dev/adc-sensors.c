@@ -45,6 +45,7 @@
 #include "adc-sensors.h"
 #include "adc-zoul.h"
 #include "zoul-sensors.h"
+#include "log.h"
 #include <stdio.h>
 #include <stdint.h>
 /*---------------------------------------------------------------------------*/
@@ -73,6 +74,8 @@ static uint16_t
 convert_to_value(uint8_t index)
 {
   uint32_t value;
+  float resistance;
+  float temperature;
   value = adc_zoul.value(sensors.sensor[index].pin_mask);
 
   if(value == ZOUL_SENSORS_ERROR) {
@@ -107,7 +110,7 @@ convert_to_value(uint8_t index)
     value /= 100000;
     return (uint16_t)value;
 
-   /* VDD+5 sensors */ 
+   /* VDD+5 sensors */
   case ANALOG_VAC_SENSOR:
     /* Linear sensor from 0 to 5 V; 0.0088 resolution*/
     value *= 88;
@@ -117,6 +120,11 @@ convert_to_value(uint8_t index)
   case ANALOG_AAC_SENSOR:
     /* Linear sensor from 0 to 5 V;*/
     return (uint16_t)value;
+
+  case ANALOG_TEMP:
+  resistance=(float)(1023-value)*10000/value;
+  temperature=1/(fastlog2(resistance/10000.0)/3975+1/298.15)-273.15;
+  return (uint16_t)temperature;
 
   default:
     return ADC_WRAPPER_ERROR;
@@ -164,8 +172,8 @@ configure(int type, int value)
   uint8_t pin_mask = GPIO_PIN_MASK(value);
 
   if((type != ANALOG_GROVE_LIGHT) && (type != ANALOG_PHIDGET_ROTATION_1109) &&
-     (type != ANALOG_GROVE_LOUDNESS) && (type != ANALOG_VAC_SENSOR) && 
-     (type != ANALOG_AAC_SENSOR) ) {
+     (type != ANALOG_GROVE_LOUDNESS) && (type != ANALOG_VAC_SENSOR) &&
+     (type != ANALOG_AAC_SENSOR) && (type != ANALOG_TEMP)) {
     PRINTF("ADC sensors: sensor not supported, check adc_wrapper.h header\n");
     return ADC_WRAPPER_ERROR;
   }
@@ -199,6 +207,7 @@ configure(int type, int value)
     break;
 
   /*V+5 sensors*/
+  case ANALOG_TEMP:
   case ANALOG_VAC_SENSOR:
   case ANALOG_AAC_SENSOR:
     if(adc_zoul.configure(SENSORS_HW_INIT, pin_mask) == ZOUL_SENSORS_ERROR) {
@@ -228,4 +237,3 @@ configure(int type, int value)
 SENSORS_SENSOR(adc_sensors, ADC_SENSORS, value, configure, NULL);
 /*---------------------------------------------------------------------------*/
 /** @} */
-
