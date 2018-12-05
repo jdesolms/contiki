@@ -45,9 +45,9 @@
 #include "adc-sensors.h"
 #include "adc-zoul.h"
 #include "zoul-sensors.h"
-#include "log.h"
 #include <stdio.h>
 #include <stdint.h>
+#include <math.h>
 /*---------------------------------------------------------------------------*/
 #define DEBUG 0
 #if DEBUG
@@ -74,8 +74,8 @@ static uint16_t
 convert_to_value(uint8_t index)
 {
   uint32_t value;
-  float resistance;
-  float temperature;
+  uint16_t resistance;
+  uint16_t temperature;
   value = adc_zoul.value(sensors.sensor[index].pin_mask);
 
   if(value == ZOUL_SENSORS_ERROR) {
@@ -122,9 +122,10 @@ convert_to_value(uint8_t index)
     return (uint16_t)value;
 
   case ANALOG_TEMP:
-  resistance=(float)(1023-value)*10000/value;
-  temperature=1/(fastlog2(resistance/10000.0)/3975+1/298.15)-273.15;
-  return (uint16_t)temperature;
+  resistance=(uint16_t)(1023-value)*10000/value;
+  printf("%u", resistance);
+  temperature=(uint16_t)1/((uint16_t)log(resistance/10000.0)/3975+1/298.15)-273.15;
+  return temperature;
 
   default:
     return ADC_WRAPPER_ERROR;

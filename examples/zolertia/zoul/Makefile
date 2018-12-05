@@ -15,6 +15,11 @@ CONTIKI_TARGET_SOURCEFILES += rgb-bl-lcd.c pm10-sensor.c iaq.c zonik.c relay.c
 CONTIKI_TARGET_SOURCEFILES += dht22.c servo.c ac-dimmer.c bme280-arch.c
 CONTIKI_TARGET_SOURCEFILES += log.c
 
+TARGET_LIBFILES += -lm
+LDFLAGS += -lm
+CFLAGS += -lm
+FLAGS += -lm
+
 MODULES += /dev/bme280
 
 all: $(CONTIKI_PROJECT)
