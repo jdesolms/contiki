@@ -122,8 +122,7 @@ convert_to_value(uint8_t index)
     return (uint16_t)value;
 
   case ANALOG_TEMP:
-  resistance=(uint16_t)(1023-value)*10000/value;
-  printf("%u", resistance);
+  resistance=(uint16_t)(1023/value)-1;
   temperature=(uint16_t)1/((uint16_t)log(resistance/10000.0)/3975+1/298.15)-273.15;
   return temperature;
 
